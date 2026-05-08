@@ -1,0 +1,135 @@
+import type { Config } from 'tailwindcss';
+import { colors, typography, spacing, motion, borderRadius, shadows } from './src/lib/design-tokens';
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      black: colors.ink,
+      white: colors.bone,
+      ink: colors.ink,
+      'ink-wash': colors.inkWash,
+      'ink-light': colors.inkLight,
+      bone: colors.bone,
+      'bone-light': colors.boneLight,
+      'red-accent': colors.redAccent,
+      'red-accent-light': colors.redAccentLight,
+      grey: colors.grey,
+      'grey-light': colors.greyLight,
+      'grey-dark': colors.greyDark,
+      silver: colors.silver,
+      'silver-light': colors.silverLight,
+      success: colors.success,
+      warning: colors.warning,
+      error: colors.error,
+      info: colors.info,
+    },
+    spacing: {
+      ...spacing,
+    },
+    fontSize: {
+      ...typography.sizes,
+    },
+    fontWeight: {
+      thin: `${typography.weights.thin}`,
+      extralight: `${typography.weights.extralight}`,
+      light: `${typography.weights.light}`,
+      normal: `${typography.weights.normal}`,
+      medium: `${typography.weights.medium}`,
+      semibold: `${typography.weights.semibold}`,
+      bold: `${typography.weights.bold}`,
+      extrabold: `${typography.weights.extrabold}`,
+      black: `${typography.weights.black}`,
+    },
+    lineHeight: {
+      tight: `${typography.lineHeights.tight}`,
+      snug: `${typography.lineHeights.snug}`,
+      normal: `${typography.lineHeights.normal}`,
+      relaxed: `${typography.lineHeights.relaxed}`,
+      loose: `${typography.lineHeights.loose}`,
+    },
+    letterSpacing: {
+      tighter: typography.letterSpacing.tighter,
+      tight: typography.letterSpacing.tight,
+      normal: typography.letterSpacing.normal,
+      wide: typography.letterSpacing.wide,
+      wider: typography.letterSpacing.wider,
+      widest: typography.letterSpacing.widest,
+    },
+    borderRadius: {
+      none: borderRadius.none,
+      xs: borderRadius.xs,
+      sm: borderRadius.sm,
+      base: borderRadius.base,
+      md: borderRadius.md,
+      lg: borderRadius.lg,
+      xl: borderRadius.xl,
+      '2xl': borderRadius['2xl'],
+      '3xl': borderRadius['3xl'],
+      full: borderRadius.full,
+    },
+    boxShadow: {
+      none: shadows.none,
+      xs: shadows.xs,
+      sm: shadows.sm,
+      base: shadows.base,
+      md: shadows.md,
+      lg: shadows.lg,
+      xl: shadows.xl,
+      'ink-sm': shadows.inkSm,
+      'ink-md': shadows.inkMd,
+      'ink-lg': shadows.inkLg,
+    },
+    extend: {
+      fontFamily: {
+        display: ['var(--font-display)'],
+        body: ['var(--font-body)'],
+        mono: typography.mono,
+      },
+      animation: {
+        'pulse-subtle': `pulse ${motion.durations.verySlow}ms ${motion.easing.easeInOut} infinite`,
+        'fade-in': `fadeIn ${motion.durations.slow}ms ${motion.easing.easeOut}`,
+        'slide-up': `slideUp ${motion.durations.slow}ms ${motion.easing.easeOut}`,
+        'slide-down': `slideDown ${motion.durations.slow}ms ${motion.easing.easeOut}`,
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+      },
+      transitionDuration: {
+        instant: motion.durations.instant.toString(),
+        fastest: `${motion.durations.fastest}ms`,
+        faster: `${motion.durations.faster}ms`,
+        fast: `${motion.durations.fast}ms`,
+        normal: `${motion.durations.normal}ms`,
+        slow: `${motion.durations.slow}ms`,
+        slower: `${motion.durations.slower}ms`,
+        slowest: `${motion.durations.slowest}ms`,
+      },
+      transitionTimingFunction: {
+        'ease-in': motion.easing.easeIn,
+        'ease-out': motion.easing.easeOut,
+        'ease-in-out': motion.easing.easeInOut,
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;
