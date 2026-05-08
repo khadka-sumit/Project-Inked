@@ -15,7 +15,6 @@ export interface Product {
   material?: string;
   tags?: string[];
 }
-
 export const mockProducts: Product[] = [
   {
     id: '1',
