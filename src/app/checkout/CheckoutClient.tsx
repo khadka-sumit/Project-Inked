@@ -55,7 +55,7 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
         subtotal,
         items: items.map(i => ({
           productId: i.product.id,
-          productName: i.product.name,
+          productName: i.product.title,
           size: i.size,
           color: i.color,
           quantity: i.quantity,
@@ -222,10 +222,10 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
               {items.map((item) => (
                 <div key={item.cartId} className="flex gap-4 items-center">
                   <div className="relative w-16 h-20 bg-[#111]">
-                    <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                    <img src={item.product.images?.[0] || item.product.image} alt={item.product.title} className="object-cover w-full h-full" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[#F2EEE7] text-sm font-bold truncate">{item.product.name}</p>
+                    <p className="text-[#F2EEE7] text-sm font-bold truncate">{item.product.title}</p>
                     <p className="text-[#8A8A8A] text-xs">{item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}</p>
                     <p className="text-[#8A8A8A] text-xs">Qty: {item.quantity}</p>
                   </div>
