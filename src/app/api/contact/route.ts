@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { Resend } from 'resend';
 import * as z from 'zod';
 
 const contactSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email(),
+  email: z.email(),
   phone: z.string().optional(),
   subject: z.string().min(2),
   inquiryType: z.string(),
@@ -21,8 +22,26 @@ export async function POST(req: Request) {
       data: validatedData,
     });
 
-    // TODO: Integrate Resend to send an email notification here
-    
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: 'Project Inked <onboarding@resend.dev>',
+          to: process.env.CONTACT_RECEIVER_EMAIL || 'support@projectinked.com',
+          subject: `[Contact] ${validatedData.inquiryType}: ${validatedData.subject}`,
+          text: [
+            `Name: ${validatedData.name}`,
+            `Email: ${validatedData.email}`,
+            validatedData.phone ? `Phone: ${validatedData.phone}` : '',
+            validatedData.orderNumber ? `Order: ${validatedData.orderNumber}` : '',
+            `\nMessage:\n${validatedData.message}`,
+          ].filter(Boolean).join('\n'),
+        });
+      } catch (emailError) {
+        console.error('Failed to send contact email:', emailError);
+      }
+    }
+
     return NextResponse.json({ success: true, message });
   } catch (error) {
     console.error('Contact form error:', error);
