@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path . -Name)",
+      "Bash(npx prisma *)",
+      "Bash(node -e \"const {Pool} = require\\('pg'\\); const p = new Pool\\({connectionString: process.env.DATABASE_URL}\\); p.query\\('SELECT 1'\\).then\\(r => { console.log\\('DB connected OK'\\); p.end\\(\\); }\\).catch\\(e => { console.error\\('DB error:', e.message\\); p.end\\(\\); }\\);\")"
+    ]
+  }
+}
