@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/cart-context';
 
 export function CartSidebar() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, totalItems, clearCart } = useCart();
+  const router = useRouter();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Close on escape
@@ -191,7 +193,10 @@ export function CartSidebar() {
             <p className="text-[10px] text-[#444] uppercase tracking-wider">
               Taxes and shipping calculated at checkout
             </p>
-            <button className="w-full py-4 bg-[#7A1111] text-[#F2EEE7] text-sm font-bold uppercase tracking-[0.3em] rounded-xl hover:bg-[#A61515] hover:shadow-[0_0_30px_rgba(122,17,17,0.35)] active:scale-95 transition-all duration-300">
+            <button
+              onClick={() => { closeCart(); router.push('/checkout'); }}
+              className="w-full py-4 bg-[#7A1111] text-[#F2EEE7] text-sm font-bold uppercase tracking-[0.3em] rounded-xl hover:bg-[#A61515] hover:shadow-[0_0_30px_rgba(122,17,17,0.35)] active:scale-95 transition-all duration-300"
+            >
               Checkout → Rs. {subtotal.toLocaleString()}
             </button>
             <button

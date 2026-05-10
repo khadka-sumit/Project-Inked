@@ -6,11 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useCart } from '@/lib/cart-context';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 const checkoutSchema = z.object({
   shippingFullName: z.string().min(2, 'Name is required'),
   shippingPhone: z.string().min(10, 'Valid phone is required'),
-  shippingEmail: z.string().email('Valid email required'),
+  shippingEmail: z.email('Valid email required'),
   shippingAddressLine1: z.string().min(5, 'Address is required'),
   shippingAddressLine2: z.string().optional(),
   shippingCity: z.string().min(2, 'City is required'),
@@ -26,6 +27,12 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  // Manual payment state
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [senderName, setSenderName] = useState('');
+  const [senderNumber, setSenderNumber] = useState('');
+  const [paymentRemarks, setPaymentRemarks] = useState('');
 
   const deliveryCharge = subtotal >= 5000 ? 0 : 150;
   const total = subtotal + deliveryCharge;
@@ -47,9 +54,42 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
 
   const onSubmit = async (data: CheckoutFormValues) => {
     if (items.length === 0) return;
+
+    if (data.paymentProvider !== 'COD') {
+      if (!screenshotFile) {
+        alert('Please upload a screenshot of your payment.');
+        return;
+      }
+      if (!senderName || !senderNumber) {
+        alert('Please provide the Sender Name and Number used for the payment.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
+      let screenshotUrl = '';
+      if (screenshotFile && data.paymentProvider !== 'COD') {
+        const supabase = createClient();
+        const fileExt = screenshotFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment_screenshots')
+          .upload(fileName, screenshotFile);
+
+        if (uploadError) {
+          throw new Error(`Failed to upload screenshot: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('payment_screenshots')
+          .getPublicUrl(fileName);
+          
+        screenshotUrl = publicUrlData.publicUrl;
+      }
+
       const orderData = {
         ...data,
         subtotal,
@@ -59,8 +99,15 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
           size: i.size,
           color: i.color,
           quantity: i.quantity,
-          unitPrice: i.product.price
-        }))
+          unitPrice: i.product.price,
+          imageUrl: i.product.images?.[0] || i.product.image || '',
+        })),
+        paymentDetails: data.paymentProvider !== 'COD' ? {
+          screenshotUrl,
+          senderName,
+          senderNumber,
+          remarks: paymentRemarks,
+        } : undefined
       };
 
       const res = await fetch('/api/orders', {
@@ -72,17 +119,13 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
 
-      if (data.paymentProvider === 'ESEWA') {
-        router.push(`/api/payments/esewa/initiate?orderId=${result.orderId}`);
-      } else if (data.paymentProvider === 'KHALTI') {
-        router.push(`/api/payments/khalti/initiate?orderId=${result.orderId}`);
-      } else {
-        clearCart();
-        router.push(`/orders/${result.orderNumber}`);
-      }
-    } catch (error) {
+      // All payments now go to the success page, waiting for admin verification if non-COD
+      clearCart();
+      router.push(`/orders/${result.orderNumber}`);
+      
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to place order. Please try again.');
+      alert(error.message || 'Failed to place order. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -103,7 +146,6 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
         <div className="lg:col-span-7">
           <h1 className="font-display text-4xl text-[#F2EEE7] mb-8">SECURE CHECKOUT</h1>
           
-          {/* Breadcrumbs */}
           <div className="flex items-center gap-4 mb-8 text-[10px] uppercase tracking-widest">
             <span className={step === 1 ? 'text-[#F2EEE7]' : 'text-[#555] cursor-pointer'} onClick={() => setStep(1)}>1. SHIPPING</span>
             <span className="text-[#333]">—</span>
@@ -192,6 +234,71 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
                   </label>
                 </div>
 
+                {(paymentProvider === 'ESEWA' || paymentProvider === 'KHALTI') && (
+                  <div className="bg-[#111] p-6 border border-[#2a2a2a] rounded-sm mt-6 animate-[fadeIn_0.3s_ease]">
+                    <div className="text-center mb-6">
+                      <p className="text-[#8A8A8A] text-[10px] uppercase tracking-widest mb-2">Scan to Pay (Rs. {total.toLocaleString()})</p>
+                      <div className="w-48 h-48 mx-auto bg-white flex items-center justify-center rounded-sm">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${paymentProvider === 'ESEWA' ? 'esewa_id_9840000000' : 'khalti_id_9840000000'}`} 
+                          alt="QR Code" 
+                        />
+                      </div>
+                      <p className="text-[#F2EEE7] text-xs mt-3">
+                        {paymentProvider === 'ESEWA' ? 'eSewa ID: 9840000000' : 'Khalti ID: 9840000000'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 border-t border-[#2a2a2a] pt-6">
+                      <h4 className="text-[#F2EEE7] text-xs uppercase tracking-widest mb-4">Payment Verification Details</h4>
+                      
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[#8A8A8A] text-[10px] uppercase tracking-[0.2em] mb-2">Sender Name *</label>
+                          <input 
+                            value={senderName}
+                            onChange={(e) => setSenderName(e.target.value)}
+                            required
+                            placeholder="Exact name on account"
+                            className="w-full bg-[#0a0a0a] border border-[#2a2a2a] text-[#F2EEE7] text-sm px-4 py-3 outline-none focus:border-[#555]" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[#8A8A8A] text-[10px] uppercase tracking-[0.2em] mb-2">Sender Number *</label>
+                          <input 
+                            value={senderNumber}
+                            onChange={(e) => setSenderNumber(e.target.value)}
+                            required
+                            placeholder="Mobile number used"
+                            className="w-full bg-[#0a0a0a] border border-[#2a2a2a] text-[#F2EEE7] text-sm px-4 py-3 outline-none focus:border-[#555]" 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[#8A8A8A] text-[10px] uppercase tracking-[0.2em] mb-2">Remarks (Optional)</label>
+                        <input 
+                          value={paymentRemarks}
+                          onChange={(e) => setPaymentRemarks(e.target.value)}
+                          placeholder="Any transaction remarks"
+                          className="w-full bg-[#0a0a0a] border border-[#2a2a2a] text-[#F2EEE7] text-sm px-4 py-3 outline-none focus:border-[#555]" 
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[#8A8A8A] text-[10px] uppercase tracking-[0.2em] mb-2">Upload Payment Screenshot *</label>
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          required
+                          onChange={(e) => setScreenshotFile(e.target.files?.[0] || null)}
+                          className="w-full bg-[#0a0a0a] border border-[#2a2a2a] text-[#F2EEE7] text-sm px-4 py-2 outline-none focus:border-[#555] file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:uppercase file:bg-[#333] file:text-[#F2EEE7] hover:file:bg-[#444]" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 mt-8">
                   <button 
                     type="button" 
@@ -203,7 +310,7 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="flex-1 py-4 bg-[#7A1111] text-[#F2EEE7] text-xs font-bold uppercase tracking-[0.3em] hover:bg-[#A61515] disabled:opacity-50"
+                    className="flex-1 py-4 bg-[#7A1111] text-[#F2EEE7] text-xs font-bold uppercase tracking-[0.3em] hover:bg-[#A61515] disabled:opacity-50 transition-colors"
                   >
                     {isSubmitting ? 'Processing...' : 'Place Order & Pay'}
                   </button>

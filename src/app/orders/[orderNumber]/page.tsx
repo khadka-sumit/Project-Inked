@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -6,12 +6,16 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ or
   const resolvedParams = await params;
   const orderNumber = resolvedParams.orderNumber;
 
-  const order = await db.order.findUnique({
-    where: { orderNumber },
-    include: { items: true }
-  });
+  const supabase = await createClient();
+  
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('*, items:order_items(*)')
+    .eq('order_number', orderNumber)
+    .single();
 
-  if (!order) {
+  if (error || !order) {
+    console.error('Order fetch error:', error);
     notFound();
   }
 
@@ -26,7 +30,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ or
         
         <h1 className="font-display text-4xl sm:text-5xl text-[#F2EEE7] mb-4">ORDER CONFIRMED</h1>
         <p className="text-[#8A8A8A] text-sm uppercase tracking-widest mb-12">
-          Order No: {order.orderNumber}
+          Order No: {order.order_number}
         </p>
 
         <div className="bg-[#0a0a0a] border border-[#1a1a1a] p-8 text-left rounded-sm mb-12">
@@ -35,14 +39,14 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ or
           <div className="grid sm:grid-cols-2 gap-8 mb-8">
             <div>
               <p className="text-[#8A8A8A] text-xs uppercase tracking-wider mb-2">Shipping To</p>
-              <p className="text-[#F2EEE7] text-sm">{order.shippingFullName}</p>
-              <p className="text-[#8A8A8A] text-xs mt-1">{order.shippingAddressLine1}</p>
-              <p className="text-[#8A8A8A] text-xs">{order.shippingCity}, {order.shippingProvince}</p>
-              <p className="text-[#8A8A8A] text-xs mt-2">{order.shippingPhone}</p>
+              <p className="text-[#F2EEE7] text-sm">{order.shipping_full_name}</p>
+              <p className="text-[#8A8A8A] text-xs mt-1">{order.shipping_address_line1}</p>
+              <p className="text-[#8A8A8A] text-xs">{order.shipping_city}, {order.shipping_province}</p>
+              <p className="text-[#8A8A8A] text-xs mt-2">{order.shipping_phone}</p>
             </div>
             <div>
               <p className="text-[#8A8A8A] text-xs uppercase tracking-wider mb-2">Payment</p>
-              <p className="text-[#F2EEE7] text-sm">{order.paymentProvider}</p>
+              <p className="text-[#F2EEE7] text-sm">{order.payment_provider}</p>
               <p className={`text-xs mt-1 font-bold ${order.status === 'PAID' ? 'text-[#4CAF50]' : 'text-[#e5a040]'}`}>
                 Status: {order.status}
               </p>
@@ -50,17 +54,17 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ or
           </div>
 
           <div className="border-t border-[#1a1a1a] pt-6 space-y-4">
-            {order.items.map(item => (
+            {order.items?.map((item: any) => (
               <div key={item.id} className="flex justify-between items-center text-sm">
-                <span className="text-[#F2EEE7]">{item.quantity}x {item.productName} <span className="text-[#8A8A8A] text-xs ml-2">({item.size})</span></span>
-                <span className="text-[#8A8A8A]">Rs. {item.totalPrice}</span>
+                <span className="text-[#F2EEE7]">{item.quantity}x {item.product_name} <span className="text-[#8A8A8A] text-xs ml-2">({item.size})</span></span>
+                <span className="text-[#8A8A8A]">Rs. {item.total_price}</span>
               </div>
             ))}
           </div>
 
           <div className="border-t border-[#1a1a1a] mt-6 pt-6 flex justify-between items-center text-[#F2EEE7] font-display text-xl">
             <span>Total</span>
-            <span>Rs. {order.totalAmount.toLocaleString()}</span>
+            <span>Rs. {order.total_amount?.toLocaleString()}</span>
           </div>
         </div>
 
