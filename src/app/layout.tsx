@@ -31,7 +31,7 @@ import { AppShell } from '@/components/layout/AppShell';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${abrilFatface.variable}`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${abrilFatface.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#050505" />
