@@ -64,6 +64,17 @@ export function Header() {
               Shop Drop
             </a>
 
+            {/* Admin Link */}
+            <a
+              href="/admin"
+              aria-label="Admin Dashboard"
+              className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#2a2a2a] text-[#F2EEE7] transition-all duration-300 hover:border-[#7A1111] hover:shadow-[0_0_15px_rgba(122,17,17,0.2)] active:scale-90"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+              </svg>
+            </a>
+
             {/* Cart button */}
             <button
               onClick={toggleCart}
