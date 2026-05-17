@@ -97,6 +97,8 @@ const config: Config = {
         'fade-in': `fadeIn ${motion.durations.slow}ms ${motion.easing.easeOut}`,
         'slide-up': `slideUp ${motion.durations.slow}ms ${motion.easing.easeOut}`,
         'slide-down': `slideDown ${motion.durations.slow}ms ${motion.easing.easeOut}`,
+        'marquee': 'marquee 25s linear infinite',
+        'pop': 'pop 0.3s ease-out forwards',
       },
       keyframes: {
         fadeIn: {
@@ -110,6 +112,15 @@ const config: Config = {
         slideDown: {
           '0%': { transform: 'translateY(-20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        pop: {
+          '0%': { transform: 'scale(0.8)', opacity: '0' },
+          '50%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
         },
       },
       transitionDuration: {

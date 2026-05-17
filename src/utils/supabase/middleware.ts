@@ -43,18 +43,10 @@ export async function updateSession(request: NextRequest) {
 
   // Admin protection
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    if (!user) {
+    const hasAdminAccess = request.cookies.get('admin_access')?.value === 'true';
+    if (!hasAdminAccess) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
-      return NextResponse.redirect(url)
-    }
-    
-    // Quick check if the user is an admin by email for MVP
-    const isAdmin = user.email === 'admin@projectinked.com' || user.email === 'support@projectinked.com'
-    
-    if (!isAdmin) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
       return NextResponse.redirect(url)
     }
   }
