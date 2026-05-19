@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { SmoothScroll } from '@/components/animation/SmoothScroll';
@@ -12,6 +13,14 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin');
+
+  // Admin pages have their own standalone layout — no site header/footer
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
   return (
     <CartProvider>
       <div className="min-h-screen bg-[#050505] text-[#F2EEE7]">
