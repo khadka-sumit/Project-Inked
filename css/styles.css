@@ -2186,16 +2186,25 @@ select.form-input { appearance: none; cursor: pointer; }
 }
 
 /* ═══════════════════════════════════════════
-   REDUCED MOTION
+   REDUCED MOTION — targeted, not nuclear
+   Only removes decorative/looping animations.
+   Core UI transitions (modals, reveals, cart)
+   are intentionally preserved.
    ═══════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  /* Stop looping decorative animations only */
+  .scroll-element,
+  .marquee-dot,
+  .scroll-indicator {
+    animation: none !important;
+  }
+  /* Slow down transitions slightly but don't kill them */
+  .reveal {
     transition-duration: 0.01ms !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
   html { scroll-behavior: auto; }
-  .reveal { opacity: 1; transform: none; }
 }
 
 /* ═══════════════════════════════════════════

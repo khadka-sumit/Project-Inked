@@ -221,7 +221,7 @@
             <span class="cart-subtotal-val">Rs. ${subtotal.toLocaleString()}</span>
           </div>
           <p class="cart-tax">Taxes and shipping calculated at checkout</p>
-          <button class="checkout-btn" onclick="alert('Checkout coming soon!')">Checkout → Rs. ${subtotal.toLocaleString()}</button>
+          <button class="checkout-btn" onclick="window.location.href='checkout.html'">Checkout → Rs. ${subtotal.toLocaleString()}</button>
           <button class="cart-continue" onclick="closeCart()">Continue Shopping</button>
         `;
       } else {
